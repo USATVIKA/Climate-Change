@@ -1,0 +1,48 @@
+---
+title: "Climate Change"
+execute: 
+  echo: false
+---
+
+```{r, message = FALSE, warning = FALSE}
+#|label: setup
+library(tidyverse)
+library(scales)
+library(viridis)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+```
+```{r}
+climate_data <- read_csv("climate_change_indicators.csv", show_col_types = FALSE)
+climate_data_change <- climate_data |>
+  mutate(Temperature_Change = F2022 - F1961) |>
+  select(ISO3, Temperature_Change) |>
+  drop_na()
+world <- ne_countries(scale = "medium", returnclass = "sf")
+climate_world <- world |>
+  left_join(climate_data_change, by = c("iso_a3" = "ISO3"))
+
+```
+```{r}
+# Plot the temperature change
+climate_change_world_plot <- ggplot(climate_world) +
+  geom_sf(aes(fill = Temperature_Change)) +
+  scale_fill_viridis_c(option = "plasma", na.value = "gray80") +
+  theme_minimal() +
+  labs(
+    title = "Temperature Change from 1961 to 2022",
+    fill = "Temperature Change (°C)"
+  ) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5, size = 20)
+  )
+climate_change_world_plot
+
+```
+
+```{r, message=FALSE}
+ggsave(filename = "Temperature Change Around The World from 1961 to 2022.pdf", climate_change_world_plot)
+```
+
